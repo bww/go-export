@@ -10,9 +10,10 @@ var ErrUnsupported = errors.New("Unsupported export format")
 
 type Config struct {
 	Safe      bool
-	Title     string // the title of the exported document
-	Namespace string // the namespace for all exported elements
-	Element   string // the name of a single export element
+	Title     string   // the title of the exported document
+	Namespace string   // the namespace for all exported elements
+	Element   string   // the name of a single export element
+	Fields    []string // explicitly provide included fields
 }
 
 // An exporter exports a bunch of records

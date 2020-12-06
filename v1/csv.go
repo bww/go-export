@@ -9,11 +9,11 @@ import (
 type csvExporter struct {
 	*csv.Writer
 	header []string
-	safe   bool
+	conf   Config
 }
 
 func newCSVExporter(w io.Writer, c Config) Exporter {
-	return &csvExporter{csv.NewWriter(w), nil, c.Safe}
+	return &csvExporter{csv.NewWriter(w), nil, c}
 }
 
 func (e *csvExporter) Write(raw interface{}) error {
@@ -23,11 +23,17 @@ func (e *csvExporter) Write(raw interface{}) error {
 	}
 
 	if e.header == nil {
-		h := make([]string, len(record))
-		i := 0
-		for k, _ := range record {
-			h[i] = k
-			i++
+		var h []string
+		if l := len(e.conf.Fields); l > 0 {
+			h = make([]string, l)
+			copy(h, e.conf.Fields)
+		} else {
+			h = make([]string, len(record))
+			i := 0
+			for k, _ := range record {
+				h[i] = k
+				i++
+			}
 		}
 		sort.Strings(h)
 		err := e.Writer.Write(h)
@@ -41,7 +47,7 @@ func (e *csvExporter) Write(raw interface{}) error {
 	for i, x := range e.header {
 		if v := record[x]; v == nil {
 			values[i] = ""
-		} else if e.safe {
+		} else if e.conf.Safe {
 			values[i] = escapeCSV(stringer(v))
 		} else {
 			values[i] = stringer(v)

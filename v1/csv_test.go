@@ -8,15 +8,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testCSV struct {
-	Values []interface{}
-	Expect string
-	Error  error
-}
-
 func TestExportCSV(t *testing.T) {
-	tests := []testCSV{
+	tests := []struct {
+		Config Config
+		Values []interface{}
+		Expect string
+		Error  error
+	}{
 		{
+			Config: Config{},
 			Values: []interface{}{
 				struct {
 					A string `csv:"a"`
@@ -39,12 +39,40 @@ func TestExportCSV(t *testing.T) {
 			},
 			Expect: "a,b,c\nHello,123,true\nAnother,987,false\n",
 		},
+		{
+			Config: Config{
+				Fields: []string{
+					"a", "b", "c", "d", "e",
+				},
+			},
+			Values: []interface{}{
+				struct {
+					A string `csv:"a"`
+					B int    `csv:"b"`
+					C bool   `csv:"c"`
+				}{
+					"Hello",
+					123,
+					true,
+				},
+				struct {
+					A string `csv:"a"`
+					B int    `csv:"b"`
+					C bool   `csv:"c"`
+				}{
+					"Another",
+					987,
+					false,
+				},
+			},
+			Expect: "a,b,c,d,e\nHello,123,true,,\nAnother,987,false,,\n",
+		},
 	}
 
 outer:
 	for _, e := range tests {
 		b := &bytes.Buffer{}
-		x := newCSVExporter(b, Config{})
+		x := newCSVExporter(b, e.Config)
 		for _, v := range e.Values {
 			err := x.Write(v)
 			if err != nil {
